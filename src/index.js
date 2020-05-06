@@ -78,7 +78,14 @@ export default function typescript ( options = {} ) {
 			if ( !importer ) return null;
 			importer = importer.split('\\').join('/');
 
-			const result = typescript.nodeModuleNameResolver(importee, importer, compilerOptions, resolveHost);
+			let result = typescript.nodeModuleNameResolver(importee, importer, compilerOptions, resolveHost);
+
+			if (importee.startsWith('@lipsurf-common')) {
+				//console.log('overriding common');
+				result = typescript.nodeModuleNameResolver('../../../common/src/constants', importer, compilerOptions, resolveHost);
+				console.log('overriding common', result.resolvedModule, result.resolvedModule.resolvedFileName)
+				//return '/home/mikob/workspace/lipsurf/common/src/constants.ts';
+			}
 
 			if ( result.resolvedModule && result.resolvedModule.resolvedFileName ) {
 				if ( endsWith( result.resolvedModule.resolvedFileName, '.d.ts' ) ) {
@@ -98,7 +105,8 @@ export default function typescript ( options = {} ) {
 		},
 
 		transform ( code, id ) {
-			if ( !filter( id ) ) return null;
+			if ( !filter( id ) && !id.endsWith('constants.ts')) { return null; }
+			// if ( !filter( id ) ) return null;
 
 			const transformed = typescript.transpileModule( code, {
 				fileName: id,
